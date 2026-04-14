@@ -11,6 +11,24 @@
       Unsupported distribution/version: {{ ansible_distribution }} {{ ansible_distribution_major_version }}.
       Supported values: {{ nvidia_container_host_supported_distributions }}
 
+- name: Validate role variable types and required values
+  ansible.builtin.assert:
+    that:
+      - nvidia_container_host_manage_repository is boolean
+      - nvidia_container_host_packages is sequence
+      - nvidia_container_host_packages is not string
+      - nvidia_container_host_configure_runtime is boolean
+      - nvidia_container_host_runtime is string
+      - nvidia_container_host_set_as_default_runtime is boolean
+      - nvidia_container_host_manage_grub_cmdline_linux_default is boolean
+      - nvidia_container_host_grub_cmdline_linux_default_additional_params is sequence
+      - nvidia_container_host_grub_cmdline_linux_default_additional_params is not string
+      - nvidia_container_host_grub_cmdline_linux_default_remove_params is sequence
+      - nvidia_container_host_grub_cmdline_linux_default_remove_params is not string
+    fail_msg: >-
+      Invalid role variable type detected. Check nvidia_container_host_* variables,
+      especially grub cmdline additional/remove params (must be list of strings).
+
 - name: Install prerequisite package(s)
   ansible.builtin.package:
     name: "{{ nvidia_container_host_prerequisite_packages }}"
@@ -93,16 +111,28 @@
   register: nvidia_container_host_grub_default
   when: nvidia_container_host_manage_grub_cmdline_linux_default | bool
 
+- name: Parse current GRUB_CMDLINE_LINUX_DEFAULT line
+  ansible.builtin.set_fact:
+    nvidia_container_host_grub_cmdline_linux_default_line: >-
+      {{
+        (
+          nvidia_container_host_grub_default.content
+          | b64decode
+          | regex_findall('^GRUB_CMDLINE_LINUX_DEFAULT="[^"]*"', multiline=True)
+          | first
+          | default('')
+        )
+      }}
+  when: nvidia_container_host_manage_grub_cmdline_linux_default | bool
+
 - name: Parse current GRUB_CMDLINE_LINUX_DEFAULT parameters
   ansible.builtin.set_fact:
     nvidia_container_host_grub_cmdline_linux_default_current: >-
       {{
         (
-          nvidia_container_host_grub_default.content
-          | b64decode
-          | regex_search('^GRUB_CMDLINE_LINUX_DEFAULT="([^"]*)"', '\\1', multiline=True)
-          | default([''], true)
-          | first
+          nvidia_container_host_grub_cmdline_linux_default_line
+          | regex_replace('^GRUB_CMDLINE_LINUX_DEFAULT="', '')
+          | regex_replace('"$', '')
         ).split()
       }}
   when: nvidia_container_host_manage_grub_cmdline_linux_default | bool
