@@ -25,6 +25,8 @@
       - nvidia_container_host_grub_cmdline_linux_default_additional_params is not string
       - nvidia_container_host_grub_cmdline_linux_default_remove_params is sequence
       - nvidia_container_host_grub_cmdline_linux_default_remove_params is not string
+      - nvidia_container_host_reboot_after_grub_update is boolean
+      - nvidia_container_host_reboot_timeout | int > 0
     fail_msg: >-
       Invalid role variable type detected. Check nvidia_container_host_* variables,
       especially grub cmdline additional/remove params (must be list of strings).
@@ -158,4 +160,6 @@
     line: "GRUB_CMDLINE_LINUX_DEFAULT=\"{{ nvidia_container_host_grub_cmdline_linux_default_desired | join(' ') }}\""
     backup: true
   when: nvidia_container_host_manage_grub_cmdline_linux_default | bool
-  notify: Update grub
+  notify:
+    - Update grub
+    - Reboot host after grub update

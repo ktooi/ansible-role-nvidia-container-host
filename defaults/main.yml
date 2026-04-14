@@ -20,3 +20,7 @@ nvidia_container_host_manage_grub_cmdline_linux_default: true
 nvidia_container_host_grub_cmdline_linux_default_additional_params:
   - pcie_acs_override=downstream,multifunction
 nvidia_container_host_grub_cmdline_linux_default_remove_params: []
+
+# Reboot host after GRUB changes are applied.
+nvidia_container_host_reboot_after_grub_update: false
+nvidia_container_host_reboot_timeout: 600

@@ -36,6 +36,8 @@ An Ansible Role to prepare a container host for NVIDIA GPU workloads.
 | `nvidia_container_host_manage_grub_cmdline_linux_default` | Whether to manage `GRUB_CMDLINE_LINUX_DEFAULT`. | `true` | `true`, `false` |
 | `nvidia_container_host_grub_cmdline_linux_default_additional_params` | Kernel parameters to add to `GRUB_CMDLINE_LINUX_DEFAULT`. | `['pcie_acs_override=downstream,multifunction']` | List of kernel parameter strings |
 | `nvidia_container_host_grub_cmdline_linux_default_remove_params` | Kernel parameters to remove from `GRUB_CMDLINE_LINUX_DEFAULT`. | `[]` | List of kernel parameter strings |
+| `nvidia_container_host_reboot_after_grub_update` | Whether to reboot the host after GRUB settings are updated. | `false` | `true`, `false` |
+| `nvidia_container_host_reboot_timeout` | Timeout (seconds) for reboot completion when reboot is enabled. | `600` | Positive integer |
 
 Distribution-specific values are loaded via `tasks/variables.yml` in this order:
 

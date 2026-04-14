@@ -8,3 +8,9 @@
 - name: Update grub
   ansible.builtin.command: "{{ nvidia_container_host_grub_update_command }}"
   when: nvidia_container_host_grub_update_command | length > 0
+
+- name: Reboot host after grub update
+  ansible.builtin.reboot:
+    msg: "Reboot initiated by nvidia_container_host role after GRUB update"
+    reboot_timeout: "{{ nvidia_container_host_reboot_timeout }}"
+  when: nvidia_container_host_reboot_after_grub_update | bool

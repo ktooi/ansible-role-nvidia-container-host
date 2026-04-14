@@ -35,6 +35,8 @@ Container 環境で NVIDIA GPU を利用可能にする Container Host を構築
 | `nvidia_container_host_manage_grub_cmdline_linux_default` | `GRUB_CMDLINE_LINUX_DEFAULT` を管理するかどうか。 | `true` | `true`, `false` |
 | `nvidia_container_host_grub_cmdline_linux_default_additional_params` | `GRUB_CMDLINE_LINUX_DEFAULT` に追加するカーネルパラメータ。 | `['pcie_acs_override=downstream,multifunction']` | カーネルパラメータ文字列のリスト |
 | `nvidia_container_host_grub_cmdline_linux_default_remove_params` | `GRUB_CMDLINE_LINUX_DEFAULT` から削除するカーネルパラメータ。 | `[]` | カーネルパラメータ文字列のリスト |
+| `nvidia_container_host_reboot_after_grub_update` | GRUB 更新後にホストを再起動するかどうか。 | `false` | `true`, `false` |
+| `nvidia_container_host_reboot_timeout` | 再起動有効時の完了待機タイムアウト（秒）。 | `600` | 正の整数 |
 
 ディストリビューションごとの差分は `tasks/variables.yml` で `vars/{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml` → `vars/{{ ansible_os_family }}.yml` の順に読み込む方式です。
 
