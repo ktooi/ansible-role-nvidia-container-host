@@ -1,0 +1,87 @@
+---
+- name: Include common variables
+  ansible.builtin.include_vars: "{{ role_path }}/vars/main.yml"
+  tags:
+    - always
+
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ role_path }}/vars/{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ role_path }}/vars/{{ ansible_os_family }}.yml"
+      skip: true
+  tags:
+    - always
+
+- name: Define nvidia_container_host_supported_distributions
+  ansible.builtin.set_fact:
+    nvidia_container_host_supported_distributions: "{{ __nvidia_container_host_supported_distributions }}"
+  when: nvidia_container_host_supported_distributions is not defined
+  tags:
+    - always
+
+- name: Define nvidia_container_host_apt_architecture_map
+  ansible.builtin.set_fact:
+    nvidia_container_host_apt_architecture_map: "{{ __nvidia_container_host_apt_architecture_map }}"
+  when: nvidia_container_host_apt_architecture_map is not defined
+  tags:
+    - always
+
+- name: Define nvidia_container_host_apt_architecture
+  ansible.builtin.set_fact:
+    nvidia_container_host_apt_architecture: >-
+      {{ nvidia_container_host_apt_architecture_map.get(ansible_architecture, ansible_architecture) }}
+  when: nvidia_container_host_apt_architecture is not defined
+  tags:
+    - always
+
+- name: Define nvidia_container_host_prerequisite_packages
+  ansible.builtin.set_fact:
+    nvidia_container_host_prerequisite_packages: "{{ __nvidia_container_host_prerequisite_packages | list }}"
+  when: nvidia_container_host_prerequisite_packages is not defined
+  tags:
+    - always
+
+- name: Define nvidia_container_host_repository_key_url
+  ansible.builtin.set_fact:
+    nvidia_container_host_repository_key_url: "{{ __nvidia_container_host_repository_key_url }}"
+  when: nvidia_container_host_repository_key_url is not defined
+  tags:
+    - always
+
+- name: Define nvidia_container_host_repository_key_path
+  ansible.builtin.set_fact:
+    nvidia_container_host_repository_key_path: "{{ __nvidia_container_host_repository_key_path }}"
+  when:
+    - nvidia_container_host_repository_key_path is not defined
+    - __nvidia_container_host_repository_key_path is defined
+  tags:
+    - always
+
+- name: Define nvidia_container_host_repository_definition
+  ansible.builtin.set_fact:
+    nvidia_container_host_repository_definition: "{{ __nvidia_container_host_repository_definition }}"
+  when:
+    - nvidia_container_host_repository_definition is not defined
+    - __nvidia_container_host_repository_definition is defined
+  tags:
+    - always
+
+- name: Define nvidia_container_host_repository_baseurl
+  ansible.builtin.set_fact:
+    nvidia_container_host_repository_baseurl: "{{ __nvidia_container_host_repository_baseurl }}"
+  when:
+    - nvidia_container_host_repository_baseurl is not defined
+    - __nvidia_container_host_repository_baseurl is defined
+  tags:
+    - always
+
+- name: Define nvidia_container_host_grub_update_command
+  ansible.builtin.set_fact:
+    nvidia_container_host_grub_update_command: "{{ __nvidia_container_host_grub_update_command }}"
+  when:
+    - nvidia_container_host_grub_update_command is not defined
+    - __nvidia_container_host_grub_update_command is defined
+  tags:
+    - always

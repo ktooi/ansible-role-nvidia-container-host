@@ -1,0 +1,22 @@
+---
+# Whether to install NVIDIA's upstream package repository.
+nvidia_container_host_manage_repository: true
+
+# Package(s) required to run NVIDIA workloads in containers.
+nvidia_container_host_packages:
+  - nvidia-container-toolkit
+
+# Runtime integration settings.
+nvidia_container_host_configure_runtime: true
+nvidia_container_host_runtime: docker
+nvidia_container_host_set_as_default_runtime: false
+
+# Service to restart after runtime configuration.
+nvidia_container_host_runtime_service_name: "{{ nvidia_container_host_runtime }}"
+nvidia_container_host_restart_runtime_service: true
+
+# GRUB kernel command line management.
+nvidia_container_host_manage_grub_cmdline_linux_default: true
+nvidia_container_host_grub_cmdline_linux_default_additional_params:
+  - pcie_acs_override=downstream,multifunction
+nvidia_container_host_grub_cmdline_linux_default_remove_params: []

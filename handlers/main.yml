@@ -1,0 +1,10 @@
+---
+- name: Restart container runtime
+  ansible.builtin.service:
+    name: "{{ nvidia_container_host_runtime_service_name }}"
+    state: restarted
+  when: nvidia_container_host_restart_runtime_service | bool
+
+- name: Update grub
+  ansible.builtin.command: "{{ nvidia_container_host_grub_update_command }}"
+  when: nvidia_container_host_grub_update_command | length > 0
