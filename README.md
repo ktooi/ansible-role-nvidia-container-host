@@ -22,18 +22,20 @@ An Ansible Role to prepare a container host for NVIDIA GPU workloads.
 - Debian: 11 (bullseye), 12 (bookworm)
 - Ubuntu LTS: 22.04 (jammy), 24.04 (noble)
 
-## Variables
+## Role Variables
 
-Key role variables:
-
-- `nvidia_container_host_manage_repository`
-- `nvidia_container_host_packages`
-- `nvidia_container_host_configure_runtime`
-- `nvidia_container_host_runtime`
-- `nvidia_container_host_set_as_default_runtime`
-- `nvidia_container_host_manage_grub_cmdline_linux_default`
-- `nvidia_container_host_grub_cmdline_linux_default_additional_params`
-- `nvidia_container_host_grub_cmdline_linux_default_remove_params`
+| Variable | Description | Default | Allowed values |
+| --- | --- | --- | --- |
+| `nvidia_container_host_manage_repository` | Whether this role manages NVIDIA package repositories and repository keys. | `true` | `true`, `false` |
+| `nvidia_container_host_packages` | Package list installed for NVIDIA container support. | `['nvidia-container-toolkit']` | List of package names |
+| `nvidia_container_host_configure_runtime` | Whether to run `nvidia-ctk runtime configure`. | `true` | `true`, `false` |
+| `nvidia_container_host_runtime` | Target container runtime for `nvidia-ctk runtime configure`. | `docker` | Runtime name string (e.g. `docker`, `containerd`) |
+| `nvidia_container_host_set_as_default_runtime` | Whether to pass `--set-as-default` to `nvidia-ctk`. | `false` | `true`, `false` |
+| `nvidia_container_host_runtime_service_name` | Service name restarted after runtime config changes. | `{{ nvidia_container_host_runtime }}` | Valid service name on the target host |
+| `nvidia_container_host_restart_runtime_service` | Whether to restart the runtime service when config changes. | `true` | `true`, `false` |
+| `nvidia_container_host_manage_grub_cmdline_linux_default` | Whether to manage `GRUB_CMDLINE_LINUX_DEFAULT`. | `true` | `true`, `false` |
+| `nvidia_container_host_grub_cmdline_linux_default_additional_params` | Kernel parameters to add to `GRUB_CMDLINE_LINUX_DEFAULT`. | `['pcie_acs_override=downstream,multifunction']` | List of kernel parameter strings |
+| `nvidia_container_host_grub_cmdline_linux_default_remove_params` | Kernel parameters to remove from `GRUB_CMDLINE_LINUX_DEFAULT`. | `[]` | List of kernel parameter strings |
 
 Distribution-specific values are loaded via `tasks/variables.yml` in this order:
 
