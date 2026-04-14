@@ -7,6 +7,7 @@
 
 - name: Update grub
   ansible.builtin.command: "{{ nvidia_container_host_grub_update_command }}"
+  changed_when: false
   when: nvidia_container_host_grub_update_command | length > 0
 
 - name: Reboot host after grub update

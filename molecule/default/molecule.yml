@@ -25,6 +25,7 @@ provisioner:
         nvidia_container_host_prerequisite_packages: []
         nvidia_container_host_configure_runtime: false
         nvidia_container_host_manage_grub_cmdline_linux_default: false
+        nvidia_container_host_reboot_after_grub_update: false
 
 scenario:
   name: default

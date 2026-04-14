@@ -3,7 +3,5 @@
   hosts: all
   become: true
   gather_facts: true
-  tasks:
-    - name: Include role
-      ansible.builtin.include_role:
-        name: ktooi.nvidia_container_host
+  roles:
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"

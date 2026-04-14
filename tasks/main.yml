@@ -53,6 +53,7 @@
     | gpg --dearmor --yes -o {{ nvidia_container_host_repository_key_path }}
   args:
     executable: /bin/bash
+    creates: "{{ nvidia_container_host_repository_key_path }}"
   when:
     - ansible_os_family == 'Debian'
     - nvidia_container_host_manage_repository | bool
