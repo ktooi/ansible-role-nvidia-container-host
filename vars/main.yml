@@ -1,0 +1,25 @@
+---
+__nvidia_container_host_supported_distributions:
+  Debian:
+    - '11'
+    - '12'
+  Ubuntu:
+    - '22'
+    - '24'
+  RedHat:
+    - '8'
+    - '9'
+    - '10'
+  Rocky:
+    - '8'
+    - '9'
+    - '10'
+  AlmaLinux:
+    - '8'
+    - '9'
+    - '10'
+
+__nvidia_container_host_apt_architecture_map:
+  x86_64: amd64
+  aarch64: arm64
+  armv7l: armhf

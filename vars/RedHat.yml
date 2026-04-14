@@ -1,0 +1,8 @@
+---
+__nvidia_container_host_prerequisite_packages:
+  - curl
+
+__nvidia_container_host_repository_key_url: https://nvidia.github.io/libnvidia-container/gpgkey
+__nvidia_container_host_repository_baseurl: https://nvidia.github.io/libnvidia-container/stable/rpm/$basearch
+
+__nvidia_container_host_grub_update_command: grub2-mkconfig -o /boot/grub2/grub.cfg

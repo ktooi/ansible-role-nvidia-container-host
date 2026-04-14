@@ -1,0 +1,13 @@
+---
+__nvidia_container_host_prerequisite_packages:
+  - ca-certificates
+  - curl
+  - gnupg
+
+__nvidia_container_host_repository_key_url: https://nvidia.github.io/libnvidia-container/gpgkey
+__nvidia_container_host_repository_key_path: /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+__nvidia_container_host_repository_definition: >-
+  deb [arch={{ nvidia_container_host_apt_architecture }} signed-by={{ nvidia_container_host_repository_key_path }}]
+  https://nvidia.github.io/libnvidia-container/stable/deb/{{ nvidia_container_host_apt_architecture }} /
+
+__nvidia_container_host_grub_update_command: update-grub

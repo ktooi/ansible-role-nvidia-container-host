@@ -1,0 +1,166 @@
+---
+- name: Load role variables
+  ansible.builtin.import_tasks: variables.yml
+
+- name: Validate supported distribution and major version
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution in nvidia_container_host_supported_distributions
+      - ansible_distribution_major_version in nvidia_container_host_supported_distributions[ansible_distribution]
+    fail_msg: >-
+      Unsupported distribution/version: {{ ansible_distribution }} {{ ansible_distribution_major_version }}.
+      Supported values: {{ nvidia_container_host_supported_distributions }}
+
+- name: Validate role variable types and required values
+  ansible.builtin.assert:
+    that:
+      - nvidia_container_host_manage_repository is boolean
+      - nvidia_container_host_packages is sequence
+      - nvidia_container_host_packages is not string
+      - nvidia_container_host_configure_runtime is boolean
+      - nvidia_container_host_runtime is string
+      - nvidia_container_host_set_as_default_runtime is boolean
+      - nvidia_container_host_manage_grub_cmdline_linux_default is boolean
+      - nvidia_container_host_grub_cmdline_linux_default_additional_params is sequence
+      - nvidia_container_host_grub_cmdline_linux_default_additional_params is not string
+      - nvidia_container_host_grub_cmdline_linux_default_remove_params is sequence
+      - nvidia_container_host_grub_cmdline_linux_default_remove_params is not string
+      - nvidia_container_host_reboot_after_grub_update is boolean
+      - nvidia_container_host_reboot_timeout | int > 0
+    fail_msg: >-
+      Invalid role variable type detected. Check nvidia_container_host_* variables,
+      especially grub cmdline additional/remove params (must be list of strings).
+
+- name: Install prerequisite package(s)
+  ansible.builtin.package:
+    name: "{{ nvidia_container_host_prerequisite_packages }}"
+    state: present
+  when: nvidia_container_host_manage_repository | bool
+
+- name: Ensure APT keyring directory exists
+  ansible.builtin.file:
+    path: "{{ nvidia_container_host_repository_key_path | dirname }}"
+    state: directory
+    mode: '0755'
+  when:
+    - ansible_os_family == 'Debian'
+    - nvidia_container_host_manage_repository | bool
+
+- name: Install NVIDIA repository keyring for APT
+  ansible.builtin.shell: >-
+    set -o pipefail
+    && curl -fsSL {{ nvidia_container_host_repository_key_url }}
+    | gpg --dearmor --yes -o {{ nvidia_container_host_repository_key_path }}
+  args:
+    executable: /bin/bash
+    creates: "{{ nvidia_container_host_repository_key_path }}"
+  when:
+    - ansible_os_family == 'Debian'
+    - nvidia_container_host_manage_repository | bool
+
+- name: Configure NVIDIA container toolkit APT repository
+  ansible.builtin.apt_repository:
+    repo: "{{ nvidia_container_host_repository_definition }}"
+    state: present
+    filename: nvidia-container-toolkit
+    update_cache: true
+  when:
+    - ansible_os_family == 'Debian'
+    - nvidia_container_host_manage_repository | bool
+
+- name: Install NVIDIA repository key for RPM
+  ansible.builtin.rpm_key:
+    key: "{{ nvidia_container_host_repository_key_url }}"
+    state: present
+  when:
+    - ansible_os_family == 'RedHat'
+    - nvidia_container_host_manage_repository | bool
+
+- name: Configure NVIDIA container toolkit YUM repository
+  ansible.builtin.yum_repository:
+    name: nvidia-container-toolkit
+    description: NVIDIA libnvidia-container stable repository
+    baseurl: "{{ nvidia_container_host_repository_baseurl }}"
+    enabled: true
+    gpgcheck: true
+    gpgkey: "{{ nvidia_container_host_repository_key_url }}"
+    repo_gpgcheck: false
+    state: present
+  when:
+    - ansible_os_family == 'RedHat'
+    - nvidia_container_host_manage_repository | bool
+
+- name: Install NVIDIA container toolkit package(s)
+  ansible.builtin.package:
+    name: "{{ nvidia_container_host_packages }}"
+    state: present
+
+- name: Configure NVIDIA container runtime integration
+  ansible.builtin.command:
+    cmd: >-
+      nvidia-ctk runtime configure
+      --runtime={{ nvidia_container_host_runtime }}
+      {{ '--set-as-default' if nvidia_container_host_set_as_default_runtime else '' }}
+  register: nvidia_container_host_runtime_configure
+  changed_when: >-
+    'wrote updated config' in (nvidia_container_host_runtime_configure.stdout | lower)
+    or 'wrote updated config' in (nvidia_container_host_runtime_configure.stderr | lower)
+  when: nvidia_container_host_configure_runtime | bool
+  notify: Restart container runtime
+
+- name: Read /etc/default/grub
+  ansible.builtin.slurp:
+    src: /etc/default/grub
+  register: nvidia_container_host_grub_default
+  when: nvidia_container_host_manage_grub_cmdline_linux_default | bool
+
+- name: Parse current GRUB_CMDLINE_LINUX_DEFAULT line
+  ansible.builtin.set_fact:
+    nvidia_container_host_grub_cmdline_linux_default_line: >-
+      {{
+        (
+          nvidia_container_host_grub_default.content
+          | b64decode
+          | regex_findall('^GRUB_CMDLINE_LINUX_DEFAULT="[^"]*"', multiline=True)
+          | first
+          | default('')
+        )
+      }}
+  when: nvidia_container_host_manage_grub_cmdline_linux_default | bool
+
+- name: Parse current GRUB_CMDLINE_LINUX_DEFAULT parameters
+  ansible.builtin.set_fact:
+    nvidia_container_host_grub_cmdline_linux_default_current: >-
+      {{
+        (
+          nvidia_container_host_grub_cmdline_linux_default_line
+          | regex_replace('^GRUB_CMDLINE_LINUX_DEFAULT="', '')
+          | regex_replace('"$', '')
+        ).split()
+      }}
+  when: nvidia_container_host_manage_grub_cmdline_linux_default | bool
+
+- name: Build desired GRUB_CMDLINE_LINUX_DEFAULT parameters
+  ansible.builtin.set_fact:
+    nvidia_container_host_grub_cmdline_linux_default_desired: >-
+      {{
+        (
+          nvidia_container_host_grub_cmdline_linux_default_current
+          + nvidia_container_host_grub_cmdline_linux_default_additional_params
+        )
+        | reject('in', nvidia_container_host_grub_cmdline_linux_default_remove_params)
+        | unique
+        | list
+      }}
+  when: nvidia_container_host_manage_grub_cmdline_linux_default | bool
+
+- name: Persist GRUB_CMDLINE_LINUX_DEFAULT
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT='
+    line: "GRUB_CMDLINE_LINUX_DEFAULT=\"{{ nvidia_container_host_grub_cmdline_linux_default_desired | join(' ') }}\""
+    backup: true
+  when: nvidia_container_host_manage_grub_cmdline_linux_default | bool
+  notify:
+    - Update grub
+    - Reboot host after grub update

@@ -1,0 +1,29 @@
+---
+galaxy_info:
+  role_name: nvidia_container_host
+  namespace: ktooi
+  author: ktooi
+  description: Build a container host that can run NVIDIA GPU workloads.
+  license: MIT
+  min_ansible_version: '2.14'
+  platforms:
+    - name: EL
+      versions:
+        - '8'
+        - '9'
+        - '10'
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+  galaxy_tags:
+    - nvidia
+    - gpu
+    - container
+    - docker
+
+dependencies: []
